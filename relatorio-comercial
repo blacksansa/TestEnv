@@ -1,30 +1,31 @@
-    // Query para o relatório simplificado
-    cQry := " SELECT "
-    cQry += "        B1_COD,"
-    cQry += "        B1_DESC,"
-    cQry += "        B1_XMED,"
-    cQry += "        B1_GRUPO,"
-    cQry += "        BM_DESC,"
-    cQry += "        B1_XMARKUP,"
-    cQry += "        DA1_PRCVEN,"
-    cQry += "        DA1_XCUSTO,"
-    cQry += "        DA1_XMARPR,"
-    cQry += "        DA1_XMARCS"    
-    cQry += "  FROM SIGA.DA1030 DA1"
-    cQry += "      INNER JOIN SIGA.SB1030 SB1 ON B1_FILIAL = ' ' "
-    cQry += "                   AND B1_COD = DA1_CODPRO"
-    cQry += "                   AND SB1.D_E_L_E_T_ = ' '"
-    cQry += "      INNER JOIN SIGA.SBM200 SBM ON BM_FILIAL = ' '"
-    cQry += "                   AND BM_GRUPO = B1_GRUPO"
-    cQry += "                   AND SBM.D_E_L_E_T_ = ' '"
-    cQry += "    WHERE DA1_FILIAL = ' ' AND"
-    cQry += "     DA1.D_E_L_E_T_ = ' ' AND"
-    cQry += "     DA1_CODTAB = '" + cTabGer + "'"
-    cQry += " AND B1_GRUPO >= '" + cGrupoDe + "'"
-    cQry += " AND B1_GRUPO <= '" + cGrupoAte + "'"
-    cQry += " AND B1_COD >= '" + cProdDe + "'"
-    cQry += " AND B1_COD <= '" + cProdAte + "'"
-    If lDiferanca
-        cQry += " and (DA1_PRCVEN <> DA1_XMARPR or DA1_XCUSTO <> DA1_XMARCS)"
+#include "protheus.ch"
+
+/*-----------------------------------------------------------
+  Function: FrmCli01()
+  Description: Rotina para cadastro de clientes
+  Author: [Seu nome]
+  Date: [Data]
+  Param: N/A
+  Return: N/A
+-----------------------------------------------------------*/
+User Function FrmCli01()
+    Local aHeader := {} // Array para os campos da tela
+    Local cTitulo := "Cadastro de Clientes"
+    Local lOk := .F.
+
+    // Define os campos da interface (View)
+    aAdd(aHeader, {"A1_COD", "Código", "C", 6, 0})
+    aAdd(aHeader, {"A1_NOME", "Nome", "C", 40, 0})
+    aAdd(aHeader, {"A1_END", "Endereço", "C", 40, 0})
+
+    // Cria a View e passa a responsabilidade para o Controller
+    lOk := AdoView(cTitulo, aHeader)
+
+    // Se o usuário clicou em OK, processa o Model
+    If lOk
+        MsgInfo("Dados gravados com sucesso!", "Protheus")
+        // Aqui você chamaria sua função para gravar no banco de dados
+        // Por exemplo: GravaDados(aDados)
     EndIf
-    cQry += "    ORDER BY B1_COD"
+
+Return
