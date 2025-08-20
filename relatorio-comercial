@@ -2,58 +2,130 @@
 #include "file.ch"
 
 /*-----------------------------------------------------------
-  Function: ImporArq()
-  Description: Exemplo de importação de arquivo
+  Function: IMP_ATU_COND()
+  Description: Importa CSV, confere registros e atualiza se todos existirem
   Author: [Seu nome]
   Date: [Data]
   Param: N/A
   Return: N/A
 -----------------------------------------------------------*/
-User Function ImporArq()
-    Local cArqPath
-    Local nHandle
-    Local cLinha
-    Local aCampos
+User Function IMP_ATU_COND()
+    Local cArqPath   // Caminho do arquivo CSV.
+    Local nHandle    // Identificador para o arquivo aberto.
+    Local cLinha     // Variável que armazena cada linha lida do arquivo.
+    Local aCampos    // Array que conterá os dados de CAM1 e CAM2 de cada linha.
+    
+    // Variáveis para a validação e log
+    Local lTodosEncontrados := .T. // Flag que verifica se todos os registros foram encontrados. Inicia como verdadeiro.
+    Local cLogFile          := "Importacao_Log_" + DToS(Date()) + Time() + ".log" // Nome do arquivo de log, com data e hora.
+    Local nLogHandle        := -1 // Identificador para o arquivo de log.
+    
+    // Estrutura da tabela temporária para armazenar CAM1 e CAM2
+    Local aEstrutura := { {"ID_DADOS", "C", 20, 0}, {"DESCRICAO", "C", 50, 0} }
 
-    // 1. Permite que o usuário selecione o arquivo
-    cArqPath := cGetFile("*.txt", "Selecione o arquivo para importar")
-
+    // 1. Cria a tabela temporária (em memória) para armazenar os dados do arquivo.
+    DBCreate("TMP_DADOS", aEstrutura)
+    DbSelectArea("TMP_DADOS")
+    
+    // 2. Permite que o usuário selecione o arquivo CSV.
+    cArqPath := cGetFile("*.csv", "Selecione o arquivo CSV", "C:\")
+    
     If Empty(cArqPath)
         MsgInfo("Importação cancelada pelo usuário.", "Aviso")
         Return .F.
     EndIf
-
-    // 2. Tenta abrir o arquivo para leitura
+    
     nHandle := FOpen(cArqPath)
-
     If nHandle < 0
-        MsgStop("Não foi possível abrir o arquivo.", "Erro")
+        MsgStop("Erro ao abrir o arquivo. Processo cancelado.", "Erro")
         Return .F.
     EndIf
-
-    // 3. Lê o arquivo linha por linha
+    
+    MsgInfo("Iniciando a leitura do arquivo e inserção na tabela temporária...", "Aguarde")
+    
+    // 3. Lê o CSV e insere os dados na tabela temporária.
     While !FEof(nHandle)
         cLinha := FGetC(nHandle)
-
-        // Pula a linha se estiver vazia
         If Empty(cLinha)
             Loop
         EndIf
 
-        // 4. Processa a linha (exemplo: separa por vírgula)
+        // Converte a linha do CSV em um array, usando a vírgula como delimitador.
         aCampos := FWcToA(cLinha, ",")
+        If Len(aCampos) <> 2 // Verifica se a linha tem as duas colunas esperadas.
+            Loop
+        EndIf
 
-        // 5. Grava os dados na tabela (exemplo: SA1 - Clientes)
-        // DbSelectArea("SA1")
-        // MsNew()
-        // SA1->A1_COD := aCampos[1]
-        // SA1->A1_NOME := aCampos[2]
-        // DbCommit()
+        // Insere os dados de CAM1 e CAM2 na tabela temporária.
+        MsNew("TMP_DADOS")
+        TMP_DADOS->ID_DADOS  := AllTrim(aCampos[1])
+        TMP_DADOS->DESCRICAO := AllTrim(aCampos[2])
+        MsCommit()
     EndDo
-
-    // Fecha o arquivo
     FClose(nHandle)
+    
+    // 4. Inicia a conferência dos registros e a geração do log.
+    nLogHandle := FOpen(cLogFile, FW_CREATE)
+    If nLogHandle < 0
+        MsgStop("Não foi possível criar o arquivo de log.", "Erro")
+        lTodosEncontrados := .F. // Garante que o processo será cancelado.
+    Else
+        FWrite(nLogHandle, "Registros Nao Encontrados" + CRLF)
+        FWrite(nLogHandle, "-----------------------------------" + CRLF)
+        
+        // Percorre a tabela temporária, registro por registro.
+        DbSelectArea("TMP_DADOS")
+        DbGoTop()
+        
+        While !Eof()
+            // Tenta encontrar o registro na tabela de clientes (SA1).
+            // A busca usa o valor de CAM1 (TMP_DADOS->ID_DADOS) como chave.
+            DbSelectArea("SA1")
+            DbSetOrder(1) // Ordena pelo campo A1_COD, que é o CAM1 na tabela padrão.
+            If !DbSeek(TMP_DADOS->ID_DADOS) 
+                // Se o registro NÃO for encontrado, atualiza a flag e escreve no log.
+                lTodosEncontrados := .F.
+                FWrite(nLogHandle, "CAM1: " + AllTrim(TMP_DADOS->ID_DADOS) + ", CAM2: " + AllTrim(TMP_DADOS->DESCRICAO) + CRLF)
+            EndIf
+            
+            DbSelectArea("TMP_DADOS")
+            DbSkip()
+        EndDo
+    EndIf
+    
+    FClose(nLogHandle) // Fecha o arquivo de log.
 
-    MsgInfo("Arquivo importado com sucesso!", "Sucesso")
+    // 5. Bloco de decisão: Cancelar ou Atualizar.
+    If !lTodosEncontrados
+        // Se a flag for falsa, exibe uma mensagem de cancelamento e informa o log.
+        MsgStop("Processo de importação cancelado." + CRLF + "Verifique o log em: " + cLogFile, "Importação Cancelada")
+    Else
+        // Se a flag for verdadeira, todos os registros foram encontrados e o processo de atualização é iniciado.
+        MsgInfo("Todos os " + cValToChar(RecCount("TMP_DADOS")) + " registros foram encontrados!" + CRLF + "Iniciando a atualização da tabela SA1...", "Aguarde")
+        
+        DbSelectArea("TMP_DADOS")
+        DbGoTop()
+        
+        While !Eof()
+            // Realiza a atualização do registro encontrado.
+            DbSelectArea("SA1")
+            DbSetOrder(1)
+            If DbSeek(TMP_DADOS->ID_DADOS)
+                MSLock() // Trava o registro para garantir a atualização.
+                SA1->A1_NOME := TMP_DADOS->DESCRICAO // Atualiza a tabela SA1 com o valor de CAM2.
+                MsUnLock()
+                DbCommit() // Confirma a atualização no banco de dados.
+            EndIf
+            
+            DbSelectArea("TMP_DADOS")
+            DbSkip()
+        EndDo
+        
+        MsgInfo("Atualização de todos os registros concluída com sucesso!", "Sucesso")
+        FErase(cLogFile) // Exclui o arquivo de log, pois não houve erros.
+    EndIf
+    
+    // 6. Limpeza: fecha a área de trabalho da tabela temporária.
+    DbCloseArea("TMP_DADOS")
 
 Return .T.
