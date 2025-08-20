@@ -1,31 +1,59 @@
 #include "protheus.ch"
+#include "file.ch"
 
 /*-----------------------------------------------------------
-  Function: FrmCli01()
-  Description: Rotina para cadastro de clientes
+  Function: ImporArq()
+  Description: Exemplo de importação de arquivo
   Author: [Seu nome]
   Date: [Data]
   Param: N/A
   Return: N/A
 -----------------------------------------------------------*/
-User Function FrmCli01()
-    Local aHeader := {} // Array para os campos da tela
-    Local cTitulo := "Cadastro de Clientes"
-    Local lOk := .F.
+User Function ImporArq()
+    Local cArqPath
+    Local nHandle
+    Local cLinha
+    Local aCampos
 
-    // Define os campos da interface (View)
-    aAdd(aHeader, {"A1_COD", "Código", "C", 6, 0})
-    aAdd(aHeader, {"A1_NOME", "Nome", "C", 40, 0})
-    aAdd(aHeader, {"A1_END", "Endereço", "C", 40, 0})
+    // 1. Permite que o usuário selecione o arquivo
+    cArqPath := cGetFile("*.txt", "Selecione o arquivo para importar")
 
-    // Cria a View e passa a responsabilidade para o Controller
-    lOk := AdoView(cTitulo, aHeader)
-
-    // Se o usuário clicou em OK, processa o Model
-    If lOk
-        MsgInfo("Dados gravados com sucesso!", "Protheus")
-        // Aqui você chamaria sua função para gravar no banco de dados
-        // Por exemplo: GravaDados(aDados)
+    If Empty(cArqPath)
+        MsgInfo("Importação cancelada pelo usuário.", "Aviso")
+        Return .F.
     EndIf
 
-Return
+    // 2. Tenta abrir o arquivo para leitura
+    nHandle := FOpen(cArqPath)
+
+    If nHandle < 0
+        MsgStop("Não foi possível abrir o arquivo.", "Erro")
+        Return .F.
+    EndIf
+
+    // 3. Lê o arquivo linha por linha
+    While !FEof(nHandle)
+        cLinha := FGetC(nHandle)
+
+        // Pula a linha se estiver vazia
+        If Empty(cLinha)
+            Loop
+        EndIf
+
+        // 4. Processa a linha (exemplo: separa por vírgula)
+        aCampos := FWcToA(cLinha, ",")
+
+        // 5. Grava os dados na tabela (exemplo: SA1 - Clientes)
+        // DbSelectArea("SA1")
+        // MsNew()
+        // SA1->A1_COD := aCampos[1]
+        // SA1->A1_NOME := aCampos[2]
+        // DbCommit()
+    EndDo
+
+    // Fecha o arquivo
+    FClose(nHandle)
+
+    MsgInfo("Arquivo importado com sucesso!", "Sucesso")
+
+Return .T.
