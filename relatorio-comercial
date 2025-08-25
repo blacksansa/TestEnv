@@ -35,3 +35,28 @@ Observações Gerais
 Em ambos os fluxos, a operação segue um padrão de limpeza (deleção) e escrita (inserção), garantindo que a tabela de preços de destino seja sempre uma nova versão, sem misturar dados antigos com novos.
 
 Essa rotina é fundamental para manter a tabela de preços atualizada para as operações de venda e precificação do ERP.
+
+As regras de markup estão definidas e são buscadas em duas partes principais do código:
+
+---
+
+### 1. Na Query SQL da Função `fMarfil`
+
+A regra geral de markup é obtida diretamente da tabela **`SBM200`** e é buscada na query SQL principal que a função `fMarfil` executa.
+
+* **`BM_MARKUP AS MARKUP`**: Esta linha na query busca o valor do markup da tabela `SBM200`. O `SBM200` geralmente armazena informações de grupos de produtos.
+* **`SBM.D_E_L_E_T_ = ' ' AND BM_GRUPO = B1_GRUPO`**: A query conecta a tabela `SBM200` (`SBM`) com a tabela de produtos `SB1030` (`B1`), buscando o markup que corresponde ao grupo de produto (`B1_GRUPO`).
+
+Esse valor de markup é trazido para a memória e armazenado na variável `_nMark` para ser usado no cálculo.
+
+---
+
+### 2. Na Lógica de Exceção dentro da Função `fMarfil`
+
+Existe uma regra específica para alguns grupos de produtos. Se o produto pertencer a um dos grupos `"10006L|10001L|10003L|10004L"` (ARTE, OURO, MASTER, FASHION), a regra de markup padrão é sobrescrita.
+
+* **`If (cAlias)->BM_XSUBGRU $ ("10006L|10001L|10003L|10004L")`**: Esta condição verifica se o subgrupo do produto está na lista de exceções.
+* **`buscMark := U_BuscaRegra(_cProd,(cAlias)->BM_XSUBGRU)`**: Se a condição for verdadeira, o código chama uma função auxiliar, `U_BuscaRegra`, para buscar um valor de markup especial.
+* **`If buscMark <> 0 .And. buscMark <> NIL`**: Se a função `U_BuscaRegra` retornar um valor válido, ele **sobrescreve** o markup padrão, garantindo que a regra de exceção seja aplicada.
+
+Em resumo, a regra de markup é, por padrão, buscada da tabela **`SBM200`**. No entanto, para grupos específicos, a função **`U_BuscaRegra`** é usada para encontrar e aplicar um markup diferente, priorizando essas exceções.
