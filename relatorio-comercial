@@ -1,105 +1,37 @@
-#include "protheus.ch"
-#include "file.ch"
+Com certeza. Abaixo está um resumo das operações realizadas na tabela PREDA1030 (DA1), formatado para análise.
 
-/*-----------------------------------------------------------
-  Function: IMP_ATU_ARRAY()
-  Description: Importa CSV para um array, confere registros e atualiza se todos existirem
-  Author: [Seu nome]
-  Date: [Data]
-  Param: N/A
-  Return: N/A
------------------------------------------------------------*/
-User Function IMP_ATU_ARRAY()
-    Local cArqPath   // Caminho do arquivo CSV.
-    Local nHandle    // Identificador para o arquivo aberto.
-    Local cLinha     // Variável que armazena cada linha lida do arquivo.
-    Local aCampos    // Array que conterá os dados de CAM1 e CAM2 de cada linha.
-    Local aCSVData   := {}  // Array principal que armazenará todos os dados do arquivo.
-    
-    // Variáveis para a validação e log
-    Local lTodosEncontrados := .T. // Flag que verifica se todos os registros foram encontrados.
-    Local cLogFile          := "Importacao_Log_" + DToS(Date()) + Time() + ".log" 
-    Local nLogHandle        := -1 
-    Local nCont             := 0   // Contador para percorrer o array.
-    
-    // 1. Permite que o usuário selecione o arquivo CSV.
-    cArqPath := cGetFile("*.csv", "Selecione o arquivo CSV", "C:\")
-    
-    If Empty(cArqPath)
-        MsgInfo("Importação cancelada pelo usuário.", "Aviso")
-        Return .F.
-    EndIf
-    
-    nHandle := FOpen(cArqPath)
-    If nHandle < 0
-        MsgStop("Erro ao abrir o arquivo. Processo cancelado.", "Erro")
-        Return .F.
-    EndIf
-    
-    MsgInfo("Iniciando a leitura do arquivo para a memória...", "Aguarde")
-    
-    // 2. Lê o CSV e insere cada linha em um array (aCSVData).
-    While !FEof(nHandle)
-        cLinha := FGetC(nHandle)
-        If Empty(cLinha)
-            Loop
-        EndIf
+Resumo das Operações na Tabela PREDA1030 (DA1)
 
-        aCampos := FWcToA(cLinha, ",")
-        If Len(aCampos) <> 2 // Verifica se a linha tem as duas colunas esperadas.
-            Loop
-        EndIf
-        
-        // Adiciona um novo array com os valores de CAM1 e CAM2 ao array principal.
-        aAdd(aCSVData, {AllTrim(aCampos[1]), AllTrim(aCampos[2])})
-    EndDo
-    FClose(nHandle)
-    
-    // 3. Inicia a conferência dos registros e a geração do log.
-    nLogHandle := FOpen(cLogFile, FW_CREATE)
-    If nLogHandle < 0
-        MsgStop("Não foi possível criar o arquivo de log.", "Erro")
-        lTodosEncontrados := .F. 
-    Else
-        FWrite(nLogHandle, "Registros Nao Encontrados" + CRLF)
-        FWrite(nLogHandle, "-----------------------------------" + CRLF)
-        
-        // Percorre o array aCSVData, registro por registro.
-        For nCont := 1 To Len(aCSVData)
-            // Tenta encontrar o registro na tabela de clientes (SA1).
-            // A busca usa o valor de CAM1 (aCSVData[nCont][1]) como chave.
-            DbSelectArea("SA1")
-            DbSetOrder(1) 
-            If !DbSeek(aCSVData[nCont][1]) 
-                // Se o registro NÃO for encontrado, atualiza a flag e escreve no log.
-                lTodosEncontrados := .F.
-                FWrite(nLogHandle, "CAM1: " + aCSVData[nCont][1] + ", CAM2: " + aCSVData[nCont][2] + CRLF)
-            EndIf
-        Next
-    EndIf
-    
-    FClose(nLogHandle) // Fecha o arquivo de log.
+A tabela PREDA1030, também conhecida como DA1, é a base para o gerenciamento de preços de produtos. As operações realizadas nessa tabela seguem dois fluxos principais, dependendo se o objetivo é congelar ou calcular os preços.
 
-    // 4. Bloco de decisão: Cancelar ou Atualizar.
-    If !lTodosEncontrados
-        MsgStop("Processo de importação cancelado." + CRLF + "Verifique o log em: " + cLogFile, "Importação Cancelada")
-    Else
-        MsgInfo("Todos os " + cValToChar(Len(aCSVData)) + " registros foram encontrados!" + CRLF + "Iniciando a atualização da tabela SA1...", "Aguarde")
-        
-        // Percorre o array novamente para realizar a atualização.
-        For nCont := 1 To Len(aCSVData)
-            DbSelectArea("SA1")
-            DbSetOrder(1)
-            If DbSeek(aCSVData[nCont][1])
-                MSLock() // Trava o registro para garantir a atualização.
-                SA1->A1_NOME := aCSVData[nCont][2] // Atualiza a tabela SA1 com o valor de CAM2.
-                MsUnLock()
-                DbCommit() // Confirma a atualização no banco de dados.
-            EndIf
-        Next
-        
-        MsgInfo("Atualização de todos os registros concluída com sucesso!", "Sucesso")
-        FErase(cLogFile) // Exclui o arquivo de log, pois não houve erros.
-    EndIf
-    
-Return .T.
+1. Fluxo de Congelamento de Preços
+
+Este fluxo é ativado quando a intenção é copiar os preços da semana anterior para a semana atual, sem recalculá-los.
+
+    Deleção: Registros de preço da semana atual são excluídos.
+
+    Cópia: Registros de preço da última movimentação da semana anterior são copiados para a semana atual. Os campos de data e hora são atualizados.
+
+    Finalidade: Garantir que os preços da semana anterior sejam mantidos para a semana de referência, "congelando-os".
+
+2. Fluxo de Cálculo de Preços
+
+Este fluxo é ativado para calcular novos preços com base nos custos de produção e nas regras de margem de lucro (markup).
+
+    Deleção: Registros de preço da semana atual são excluídos.
+
+    Cálculo: Para cada produto, o sistema executa a função ORTP169C para calcular o custo de produção. Esse cálculo é feito pela soma do custo de todos os materiais e componentes, com um ajuste de 5% de quebra.
+
+    Markup: Com o custo em mãos, o preço de venda é calculado multiplicando o custo pelo markup definido para o produto.
+
+    Inserção: Os novos registros, contendo o custo de produção e o preço de venda calculados, são inseridos na tabela PREDA1030.
+
+    Inclusão de Terceiros: Se aplicável, produtos de terceiros também são inseridos neste processo, com seus respectivos preços.
+
+    Finalidade: Gerar uma nova tabela de preços, com valores atualizados com base em regras de negócio e custos reais de produção.
+
+Observações Gerais
+
+Em ambos os fluxos, a operação segue um padrão de limpeza (deleção) e escrita (inserção), garantindo que a tabela de preços de destino seja sempre uma nova versão, sem misturar dados antigos com novos.
+
+Essa rotina é fundamental para manter a tabela de preços atualizada para as operações de venda e precificação do ERP.
