@@ -134,7 +134,7 @@ Return
 //------------------------
 Static Function SobMedida()
     Local oCalculoSobMedida := CalculoSobMedida():New()
-    Local oGravacaoSimulacao := GravacaoSimulacao():New()
+    Local oSobMedidaDAO := SobMedidaDAO():New()
     Local cQry := ""
     Local cAlias := ""
     Local aPrecoM3 := {}
@@ -148,8 +148,7 @@ Static Function SobMedida()
         aPrecoM3 := oCalculoSobMedida:Calcula(_cGrupo, cTabRef)
 
         If aPrecoM3[1] > 0
-            // Here you can use a DAO to save the m3 price to the SZV table
-            MsgInfo("Grupo: " + _cGrupo + " | Custo M3: " + Str(aPrecoM3[1]) + " | Venda M3: " + Str(aPrecoM3[2]))
+            oSobMedidaDAO:GravaPrecoM3(cSemana, _cGrupo, aPrecoM3[2], aPrecoM3[1])
         Endif
 
         (cAlias)->(dbskip())

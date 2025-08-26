@@ -248,7 +248,7 @@ RETURN
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} GravacaoSimulacao
-@description Classe para gravar os dados da simulação de preços na tabela PREDA1030
+@description Classe para gravar os dados da simulação de preços
 @author Gemini
 @since 26/08/2025
 @version 1.0
@@ -551,3 +551,30 @@ METHOD Calcula(cProduto, cTabelaRef) CLASS CalculoPreco
     nPrecoVenda := nCusto * nMarkup
 
 RETURN {Round(nCusto, 2), Round(nPrecoVenda, 2)}
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} SobMedidaDAO
+@description Classe de acesso a dados para a tabela de sob medida (SZV)
+@author Gemini
+@since 26/08/2025
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+CLASS SobMedidaDAO FROM LongClassName
+    METHOD New() CONSTRUCTOR
+    METHOD GravaPrecoM3(cTabela, cGrupo, nVendaM3, nCustoM3)
+ENDCLASS
+
+METHOD New() CLASS SobMedidaDAO
+RETURN self
+
+METHOD GravaPrecoM3(cTabela, cGrupo, nVendaM3, nCustoM3) CLASS SobMedidaDAO
+    RecLock("SZV",.T.)
+    SZV->ZV_FILIAL  := xFilial("SZV")
+    SZV->ZV_GRUPO   := cGrupo
+    SZV->ZV_TABELA  := cTabela
+    SZV->ZV_CUSTO   := nCustoM3
+    SZV->ZV_VENDA   := nVendaM3
+    SZV->ZV_VENAME  := nVendaM3
+    MsUnLock()
+RETURN
