@@ -3,7 +3,7 @@
 #INCLUDE "PROTHEUS.CH"
 #INCLUDE "SIGAWIN.CH"
 #INCLUDE "TBICONN.CH"
-#INCLUDE "classes.prw"
+#INCLUDE "functions.prw"
 
 User Function ORTP169(lSobMed)
     Local aPergs     := {}
@@ -55,8 +55,6 @@ User Function fMarfil(cProduto, cTp)
     Local _nCusto := 0
     Local _nVenda := 0
     Local lSemi   := .F.
-    Local oCalculoPreco := CalculoPreco():New()
-    Local oGravacaoSimulacao := GravacaoSimulacao():New()
 
     DEFAULT cProduto := ""
     DEFAULT cTp    := ""
@@ -109,12 +107,12 @@ User Function fMarfil(cProduto, cTp)
                 cItem   := soma1(cItem)
                 _cProd  := (cAlias)->B1_COD
 
-                aPreco := oCalculoPreco:Calcula(_cProd, cTabRef)
+                aPreco := Calculo_Preco(_cProd, cTabRef)
                 _nCusto := aPreco[1]
                 _nVenda := aPreco[2]
 
                 If _nCusto > 0
-                    oGravacaoSimulacao:GravaPreco(cTabGer, cItem, _cProd, _nVenda, _nCusto)
+                    Gravacao_GravaPreco(cTabGer, cItem, _cProd, _nVenda, _nCusto)
                 Endif
 
                 (cAlias)->(dbskip())
@@ -133,22 +131,22 @@ Return
 
 //------------------------
 Static Function SobMedida()
-    Local oCalculoSobMedida := CalculoSobMedida():New()
-    Local oSobMedidaDAO := SobMedidaDAO():New()
     Local cQry := ""
     Local cAlias := ""
     Local aPrecoM3 := {}
     Local _cGrupo := ""
+    Local cItem := "0000"
 
     cQry := " SELECT DISTINCT CHAVE FROM SIGA.REGRASMAR WHERE TABELA = 'SBM' AND SOBMED = 'S' AND D_E_L_E_T_ = ' ' "
     cAlias := U_ORTQUERY(cQry)
 
     Do While  !(cAlias)->(EOF())
         _cGrupo := (cAlias)->CHAVE
-        aPrecoM3 := oCalculoSobMedida:Calcula(_cGrupo, cTabRef)
+        aPrecoM3 := Calculo_SobMedida(_cGrupo, cTabRef)
 
         If aPrecoM3[1] > 0
-            oSobMedidaDAO:GravaPrecoM3(cSemana, _cGrupo, aPrecoM3[2], aPrecoM3[1])
+            cItem := soma1(cItem)
+            Gravacao_GravaPrecoSobMedida(cSemana, _cGrupo, aPrecoM3[2], aPrecoM3[1])
         Endif
 
         (cAlias)->(dbskip())
@@ -161,13 +159,11 @@ Return
 
 //ROTINA DE GRAVAÇÃO
 Static Function fGeraMov(cTab)
-    Local oMovimentacao := MovimentacaoPreco():New()
-    oMovimentacao:MoveParaDa1(cTab)
+    Movimentacao_MoveParaDa1(cTab)
 Return
 
 
 //ROTINA DE ATUALIZAÇÃO
 Static Function UPDATEDA1(cTab)
-    Local oAtualizacao := AtualizacaoCusto():New()
-    oAtualizacao:AtualizaCustosFromPreda(cTab)
+    Atualizacao_AtualizaCustosFromPreda(cTab)
 Return
