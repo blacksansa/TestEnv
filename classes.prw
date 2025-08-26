@@ -15,18 +15,27 @@ CLASS Produto FROM LongClassName
     DATA cDescricao AS CHARACTER
     DATA cGrupo AS CHARACTER
     DATA cModelo AS CHARACTER
+    DATA nLargura AS NUMERIC
+    DATA nComprimento AS NUMERIC
+    DATA nAltura AS NUMERIC
 
-    METHOD New(cCodigo, cDescricao, cGrupo, cModelo) CONSTRUCTOR
+    METHOD New(cCodigo, cDescricao, cGrupo, cModelo, nLargura, nComprimento, nAltura) CONSTRUCTOR
 
     METHOD GetCodigo() AS CHARACTER
     METHOD GetGrupo() AS CHARACTER
+    METHOD GetLargura() AS NUMERIC
+    METHOD GetComprimento() AS NUMERIC
+    METHOD GetAltura() AS NUMERIC
 ENDCLASS
 
-METHOD New(cCodigo, cDescricao, cGrupo, cModelo) CLASS Produto
+METHOD New(cCodigo, cDescricao, cGrupo, cModelo, nLargura, nComprimento, nAltura) CLASS Produto
     ::cCodigo := cCodigo
     ::cDescricao := cDescricao
     ::cGrupo := cGrupo
     ::cModelo := cModelo
+    ::nLargura := nLargura
+    ::nComprimento := nComprimento
+    ::nAltura := nAltura
 RETURN self
 
 METHOD GetCodigo() CLASS Produto
@@ -34,6 +43,15 @@ RETURN ::cCodigo
 
 METHOD GetGrupo() CLASS Produto
 RETURN ::cGrupo
+
+METHOD GetLargura() CLASS Produto
+RETURN ::nLargura
+
+METHOD GetComprimento() CLASS Produto
+RETURN ::nComprimento
+
+METHOD GetAltura() CLASS Produto
+RETURN ::nAltura
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} Componente
@@ -76,17 +94,20 @@ CLASS GrupoProduto FROM LongClassName
     DATA cGrupo AS CHARACTER
     DATA nMarkup AS NUMERIC
     DATA lSobMedida AS LOGICAL
+    DATA cProdutoBase AS CHARACTER
 
-    METHOD New(cGrupo, nMarkup, cSobMedida) CONSTRUCTOR
+    METHOD New(cGrupo, nMarkup, cSobMedida, cProdutoBase) CONSTRUCTOR
 
     METHOD GetMarkup() AS NUMERIC
     METHOD IsSobMedida() AS LOGICAL
+    METHOD GetProdutoBase() AS CHARACTER
 ENDCLASS
 
-METHOD New(cGrupo, nMarkup, cSobMedida) CLASS GrupoProduto
+METHOD New(cGrupo, nMarkup, cSobMedida, cProdutoBase) CLASS GrupoProduto
     ::cGrupo := cGrupo
     ::nMarkup := nMarkup
     ::lSobMedida := (cSobMedida == 'S')
+    ::cProdutoBase := cProdutoBase
 RETURN self
 
 METHOD GetMarkup() CLASS GrupoProduto
@@ -94,6 +115,72 @@ RETURN ::nMarkup
 
 METHOD IsSobMedida() CLASS GrupoProduto
 RETURN ::lSobMedida
+
+METHOD GetProdutoBase() CLASS GrupoProduto
+RETURN ::cProdutoBase
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} CalculoSobMedida
+@description Classe para calcular o preço de produtos sob medida
+@author Gemini
+@since 26/08/2025
+@version 1.0
+/*/
+//-------------------------------------------------------------------
+CLASS CalculoSobMedida FROM LongClassName
+    DATA oProdutoDAO AS OBJECT
+    DATA oCustoDAO AS OBJECT
+    DATA oGrupoProdutoDAO AS OBJECT
+    DATA oCalculoPreco AS OBJECT
+
+    METHOD New() CONSTRUCTOR
+    METHOD Calcula(cGrupo, cTabelaRef)
+
+ENDCLASS
+
+METHOD New() CLASS CalculoSobMedida
+    ::oProdutoDAO := ProdutoDAO():New()
+    ::oCustoDAO := CustoDAO():New()
+    ::oGrupoProdutoDAO := GrupoProdutoDAO():New()
+    ::oCalculoPreco := CalculoPreco():New()
+RETURN self
+
+METHOD Calcula(cGrupo, cTabelaRef) CLASS CalculoSobMedida
+    Local nCustoM3 := 0
+    Local nVendaM3 := 0
+    Local oGrupoProduto
+    Local oProdutoBase
+    Local nVolumeBase := 0
+    Local nCustoBase := 0
+    Local nMarkup := 1
+
+    oGrupoProduto := ::oGrupoProdutoDAO:GetGrupoInfo(cGrupo)
+    If oGrupoProduto == Nil .or. Empty(oGrupoProduto:GetProdutoBase())
+        Return {0, 0}
+    Endif
+
+    oProdutoBase := ::oProdutoDAO:GetProduto(oGrupoProduto:GetProdutoBase())
+    If oProdutoBase == Nil
+        Return {0, 0}
+    Endif
+
+    aCustoBase := ::oCalculoPreco:Calcula(oProdutoBase:GetCodigo(), cTabelaRef)
+    nCustoBase := aCustoBase[1]
+    nVolumeBase := oProdutoBase:GetLargura() * oProdutoBase:GetComprimento() * oProdutoBase:GetAltura()
+    nMarkup := oGrupoProduto:GetMarkup()
+
+    If nVolumeBase == 0
+        Return {0, 0}
+    Endif
+
+    nCustoM3 := ((nCustoBase / nVolumeBase) * 1.15)
+    nVendaM3 := nCustoM3 * nMarkup
+
+    nCustoM3 := (Floor(nCustoM3 / 100) * 100) + 1
+    nVendaM3 := (Floor(nVendaM3 / 100) * 100) + 1
+
+RETURN {nCustoM3, nVendaM3}
+
 
 //-------------------------------------------------------------------
 /*/{Protheus.doc} MovimentacaoPreco
@@ -187,7 +274,7 @@ RETURN self
 @param nCusto, numeric, Custo do produto
 */
 METHOD GravaPreco(cTabela, cItem, cProduto, nPrecoVenda, nCusto) CLASS GravacaoSimulacao
-    Local cInsert := "INSERT INTO SIGA.PREDA1030 (DA1_CODTAB, DA1_ITEM, DA1_CODPRO, DA1_PRCVEN, DA1_XCUSTO, DA1_DTUMOV, DA1_HRUMOV) VALUES ('"+cTabela+"','"+cItem+"','"+cProduto+"', "+Alltrim(Str(nPrecoVenda))+", "+Alltrim(Str(nCusto))+", '"+dtos(dDatabase)+"', '"+time()+"')"
+    Local cInsert := "INSERT INTO SIGA.PREDA1030 (DA1_CODTAB, DA1_ITEM, DA1_CODPRO, DA1_PRCVEN, DA1_XCUSTO, DA1_DTUMOV, DA1_HRUMOV) VALUES ('"+cTabela+"','"+cItem+"','"+cProduto+"', "+Alltrim(Str(nPrecoVenda))+", "+Alltrim(Str(nCusto))+", '"+dtos(dDatabase)+"','"+time()+"')"
     TcSqlExec(cInsert)
 RETURN
 
@@ -304,7 +391,7 @@ METHOD GetProduto(cProduto) CLASS ProdutoDAO
     dbSelectArea("SB1")
     dbSetOrder(1) // Ordem por Filial+Produto
     If dbSeek(xFilial("SB1") + cProduto)
-        oProduto := Produto():New(SB1->B1_COD, SB1->B1_DESC, SB1->B1_GRUPO, SB1->B1_XMODELO)
+        oProduto := Produto():New(SB1->B1_COD, SB1->B1_DESC, SB1->B1_GRUPO, SB1->B1_XMODELO, SB1->B1_XLARG, SB1->B1_XCOMP, SB1->B1_XALT)
     Endif
 RETURN oProduto
 
@@ -398,7 +485,7 @@ METHOD GetGrupoInfo(cGrupo) CLASS GrupoProdutoDAO
     dbSelectArea("SBM")
     dbSetOrder(1) // Ordem por Filial+Grupo
     If dbSeek(xFilial("SBM") + cGrupo)
-        oGrupoInfo := GrupoProduto():New(SBM->BM_GRUPO, SBM->BM_MARKUP, SBM->BM_XSOBMED)
+        oGrupoInfo := GrupoProduto():New(SBM->BM_GRUPO, SBM->BM_MARKUP, SBM->BM_XSOBMED, SBM->BM_XPRDPAD)
     Endif
 RETURN oGrupoInfo
 

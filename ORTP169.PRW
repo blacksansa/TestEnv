@@ -133,9 +133,31 @@ Return
 
 //------------------------
 Static Function SobMedida()
-    // A lógica desta função precisa ser refatorada para usar as novas classes.
-    // Por enquanto, a lógica original será mantida.
-    MsgInfo("Função SobMedida ainda não refatorada.")
+    Local oCalculoSobMedida := CalculoSobMedida():New()
+    Local oGravacaoSimulacao := GravacaoSimulacao():New()
+    Local cQry := ""
+    Local cAlias := ""
+    Local aPrecoM3 := {}
+    Local _cGrupo := ""
+
+    cQry := " SELECT DISTINCT CHAVE FROM SIGA.REGRASMAR WHERE TABELA = 'SBM' AND SOBMED = 'S' AND D_E_L_E_T_ = ' ' "
+    cAlias := U_ORTQUERY(cQry)
+
+    Do While  !(cAlias)->(EOF())
+        _cGrupo := (cAlias)->CHAVE
+        aPrecoM3 := oCalculoSobMedida:Calcula(_cGrupo, cTabRef)
+
+        If aPrecoM3[1] > 0
+            // Here you can use a DAO to save the m3 price to the SZV table
+            MsgInfo("Grupo: " + _cGrupo + " | Custo M3: " + Str(aPrecoM3[1]) + " | Venda M3: " + Str(aPrecoM3[2]))
+        Endif
+
+        (cAlias)->(dbskip())
+    EndDo
+
+    (cAlias)->(DBCLOSEAREA())
+
+    msgInfo("Processo finalizado!","Sucesso")
 Return
 
 //ROTINA DE GRAVAÇÃO
