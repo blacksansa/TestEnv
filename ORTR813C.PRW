@@ -33,7 +33,7 @@ aAdd( aPergs ,{1,"Grupo de"		, cGrupoDe	, ""	  , ".T."	 ,\'SBM\', '.T.', 50,.F.}
 aAdd( aPergs ,{1,"Grupo Ate"		, cGrupoAte	, ""		, ".T."	 ,\'SBM\', '.T.', 50,.T.})
 aAdd( aPergs ,{1,"Produto de"	, cProdDe	  , ""	  , ".T."	 ,\'SB1\', '.T.', 50,.F.})
 aAdd( aPergs ,{1,"Produto Ate"	, cProdAte	, ""		, ".T."	 ,\'SB1\', '.T.', 50,.T.})
-aAdd( aPergs ,{2,"Visualizar     :","Gerados",{"Gerados", "Simulacao"}						, 80, .F.,.F.})
+aAdd( aPergs ,{2,"Visualizar     :", "Gerados",{"Gerados", "Simulacao"}						, 80, .F.,.F.})
 aAdd( aPergs ,{2,"Visualizar     :","Relatorio Completo",{"Relatorio Completo", "Comercial","Dirigida 05", "Dirigida 06", "Dirigida 11", "Vendas Web", "Hotelaria","Casas Bahia"}						, 80, .F.,.F.})
 	
 	If !Parambox( aPergs, cTitulo, aRet, /* bOk */, /* aButtons */, /* lCentered */, /* nPosX */, /* nPosy */, /* oDlgWizard */, "ORTR852" + AllTrim(__cUserId) /* cLoad */, .T. /* lCanSave */, /* lUserSave */ )
@@ -100,14 +100,16 @@ Static Function fRodaRelat(cTitulo)
 
 	Local oReport		:= Nil
 	Local oSection1 	:= Nil
+	Local oBreakAgrup	:= Nil
+	Local oBreakGrupo	:= Nil
 
 	oReport 	:= TReport():New("ORTR813C",cTitulo,"ORTR813C",{|oReport| fExecRel(oReport)},UPPER(cTitulo)+" - ORTOBOM UNIDADE "+cEmpAnt)
 
-	oReport:SetTotalInLine(.T.) 		//Imprime total em Colunas
-	oReport:NoUserFilter()				//Sem filtro
-	oReport:HideParamPage()			//Sem tela de parametros
-	oReport:SetLandScape()				//oReport:SetLandScape()
-	oReport:oPage:setPaperSize(9)		//oReport:oPage:setPaperSize(12)
+	oReport:SetTotalInLine(.T.)
+	oReport:NoUserFilter()
+	oReport:HideParamPage()
+	oReport:SetLandScape()
+	oReport:oPage:setPaperSize(9)
 
 	//--------------------------------
 	//Primeira Seçao do relat rio
@@ -150,8 +152,13 @@ Static Function fRodaRelat(cTitulo)
 	oSection1:Cell("B1_XESPACO"):SetAutoSize(.T.)
 	oSection1:Cell("B1_XESPACO"):SetSize(20)
 
-	oBreakAgrup 	:= TRBreak():New(oSection1, {|oBrk| oBrk:Cell("AGRU_DESC"):SetValue(OTR814->AGRU_DESC)}, "AGRUPAMENTO", .T.)
-	oBreakGrupo 	:= TRBreak():New(oSection1, {|oBrk| oBrk:Cell("GRUPO"):SetValue(OTR814->GRUPO)}, "GRUPO", .T.)
+	// Break by AGRUPAMENTO
+	oBreakAgrup := TRBreak():New(oSection1, {|| OTR814->AGRU_DESC },, .T., "AGRUPAMENTO")
+	oBreakAgrup:SetTitle({|| "AGRUPAMENTO: " + oBreakAgrup:GetLastValue() })
+	
+	// Break by GRUPO
+	oBreakGrupo := TRBreak():New(oSection1, {|| OTR814->GRUPO },, .T., "GRUPO")
+	oBreakGrupo:SetTitle({|| "GRUPO: " + oBreakGrupo:GetLastValue() })
 
 	oSection1:SetPageBreak(.T.)
 Return oReport
@@ -161,7 +168,6 @@ Static Function fExecRel(oReport)
 	Local _aArea 		:= GetArea()
 	Local cQry 		:= ""
 	Local oSection1 	:= oReport:Section(1)
-	Private oBreak
 
 	Local cTabGer 	:= cSemana
 
@@ -239,8 +245,8 @@ cQry 		+= "                   and DA1.d_e_l_e_t_ = ' '
 	cQry 		+= "  AND B1_GRUPO <= '"+cGrupoAte+"'
 	cQry 		+= "  AND B1_COD >= '"+cProdDe+"'
 	cQry 		+= "  AND B1_COD <= '"+cProdAte+"'
-	cQry 		+= "  AND B1_XFORLIN = ' '"
-	cQry 		+= "  AND B1_XCODBAS = ' '"
+	cQry 		+= "  AND B1_XFORLIN = ' '
+	cQry 		+= "  AND B1_XCODBAS = ' '
 
 	if(cAgru <> "Relatorio Completo")
 		cQry 		+= "  AND BM_XAGRP = '"+cAgru+"'
