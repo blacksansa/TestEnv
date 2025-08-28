@@ -28,11 +28,11 @@ User Function ORTR813C()
 
 	// Adicionar parametrizacao de grupo de/ate / produto de/ate
 
-	aAdd( aPergs ,{1,"Semana         :",U_ORTP169A(),"@!"	,".T."	 ,\'DA0\' ,'.T.'                  , 80, .T.   })
-aAdd( aPergs ,{1,"Grupo de"		, cGrupoDe	, ""	  , ".T."	 ,\'SBM\', '.T.', 50,.F.})
-aAdd( aPergs ,{1,"Grupo Ate"		, cGrupoAte	, ""		, ".T."	 ,\'SBM\', '.T.', 50,.T.})
-aAdd( aPergs ,{1,"Produto de"	, cProdDe	  , ""	  , ".T."	 ,\'SB1\', '.T.', 50,.F.})
-aAdd( aPergs ,{1,"Produto Ate"	, cProdAte	, ""		, ".T."	 ,\'SB1\', '.T.', 50,.T.})
+	aAdd( aPergs ,{1,"Semana         :",U_ORTP169A(),"@!"	,".T." 	 ,\'DA0\' ,".T."                  , 80, .T.   })
+aAdd( aPergs ,{1,"Grupo de"		, cGrupoDe	, "" 	  , ".T." 	 ,\'SBM\', '.T.', 50,.F.})
+aAdd( aPergs ,{1,"Grupo Ate"		, cGrupoAte	, "" 		, ".T." 	 ,\'SBM\', '.T.', 50,.T.})
+aAdd( aPergs ,{1,"Produto de"	, cProdDe	  , "" 	  , ".T." 	 ,\'SB1\', '.T.', 50,.F.})
+aAdd( aPergs ,{1,"Produto Ate"	, cProdAte	, "" 		, ".T." 	 ,\'SB1\', '.T.', 50,.T.})
 aAdd( aPergs ,{2,"Visualizar     :", "Gerados",{"Gerados", "Simulacao"}						, 80, .F.,.F.})
 aAdd( aPergs ,{2,"Visualizar     :","Relatorio Completo",{"Relatorio Completo", "Comercial","Dirigida 05", "Dirigida 06", "Dirigida 11", "Vendas Web", "Hotelaria","Casas Bahia"}						, 80, .F.,.F.})
 	
@@ -99,9 +99,8 @@ return
 Static Function fRodaRelat(cTitulo)
 
 	Local oReport		:= Nil
-	Local oSection1 	:= Nil
-	Local oBreakAgrup	:= Nil
-	Local oBreakGrupo	:= Nil
+	Local oSectionAgru 	:= Nil
+	Local oSectionDetail 	:= Nil
 
 	oReport 	:= TReport():New("ORTR813C",cTitulo,"ORTR813C",{|oReport| fExecRel(oReport)},UPPER(cTitulo)+" - ORTOBOM UNIDADE "+cEmpAnt)
 
@@ -112,64 +111,64 @@ Static Function fRodaRelat(cTitulo)
 	oReport:oPage:setPaperSize(9)
 
 	//--------------------------------
-	//Primeira Seçao do relat rio
+	// Seçao de Agrupamento
 	//--------------------------------
-	oSection1 	:= TRSection():New(oReport,"DADOS")
-	oSection1:SetHeaderBreak(.T.)
-	oSection1:SetLinesBefore(1)
-	oSection1:lAutoSize 	:=	.F.
-	oSection1:lBold 		:=	.T.
+	oSectionAgru 	:= TRSection():New(oReport,"AGRUPAMENTO")
+	TRCell():New(oSectionAgru,"AGRU_DESC_CELL",,"AGRUPAMENTO")
+    oSectionAgru:Cell("AGRU_DESC_CELL"):SetAutoSize(.T.)
+    oSectionAgru:Cell("AGRU_DESC_CELL"):SetSize(100)
+    oSectionAgru:lBold := .T.
 
-	TRCell():New(oSection1,"BM_GRUPO",,"GRUPO")
-	oSection1:Cell("BM_GRUPO"):SetAutoSize(.T.)
-	oSection1:Cell("BM_GRUPO"):SetSize(20)
+	//--------------------------------
+	// Seçao de Detalhe
+	//--------------------------------
+	oSectionDetail 	:= TRSection():New(oReport,"DADOS")
+	oSectionDetail:SetHeaderBreak(.T.)
+	oSectionDetail:SetLinesBefore(1)
+	oSectionDetail:lAutoSize 		:= 	.F.
+	oSectionDetail:lBold 		:= 	.F. // Details are not bold
 
-	TRCell():New(oSection1,"B1_COD",,"CODIGO")
-	oSection1:Cell("B1_COD"):SetAutoSize(.T.)
-	oSection1:Cell("B1_COD"):SetSize(20)
+	TRCell():New(oSectionDetail,"BM_GRUPO",,"GRUPO")
+	oSectionDetail:Cell("BM_GRUPO"):SetAutoSize(.T.)
+	oSectionDetail:Cell("BM_GRUPO"):SetSize(20)
 
-	TRCell():New(oSection1,"MEDIDA",,"MEDIDA")
-	oSection1:Cell("MEDIDA"):SetAutoSize(.T.)
-	oSection1:Cell("MEDIDA"):SetSize(20)
+	TRCell():New(oSectionDetail,"B1_COD",,"CODIGO")
+	oSectionDetail:Cell("B1_COD"):SetAutoSize(.T.)
+	oSectionDetail:Cell("B1_COD"):SetSize(20)
 
-	TRCell():New(oSection1,"A_VISTA",,"A VISTA")
-	oSection1:Cell("A_VISTA"):SetAutoSize(.T.)
-	oSection1:Cell("A_VISTA"):SetSize(20)
+	TRCell():New(oSectionDetail,"MEDIDA",,"MEDIDA")
+	oSectionDetail:Cell("MEDIDA"):SetAutoSize(.T.)
+	oSectionDetail:Cell("MEDIDA"):SetSize(20)
 
-	TRCell():New(oSection1,"A30_DD",,"30 DD")
-	oSection1:Cell("A30_DD"):SetAutoSize(.T.)
-	oSection1:Cell("A30_DD"):SetSize(20)
+	TRCell():New(oSectionDetail,"A_VISTA",,"A VISTA")
+	oSectionDetail:Cell("A_VISTA"):SetAutoSize(.T.)
+	oSectionDetail:Cell("A_VISTA"):SetSize(20)
 
-	TRCell():New(oSection1,"A60_DD",,"60 DD")
-	oSection1:Cell("A60_DD"):SetAutoSize(.T.)
-	oSection1:Cell("A60_DD"):SetSize(20)
+	TRCell():New(oSectionDetail,"A30_DD",,"30 DD")
+	oSectionDetail:Cell("A30_DD"):SetAutoSize(.T.)
+	oSectionDetail:Cell("A30_DD"):SetSize(20)
 
-	TRCell():New(oSection1,"A90_DD",,"90 DD")
-	oSection1:Cell("A90_DD"):SetAutoSize(.T.)
-	oSection1:Cell("A90_DD"):SetSize(20)
+	TRCell():New(oSectionDetail,"A60_DD",,"60 DD")
+	oSectionDetail:Cell("A60_DD"):SetAutoSize(.T.)
+	oSectionDetail:Cell("A60_DD"):SetSize(20)
 
-	TRCell():New(oSection1,"B1_XESPACO",,"ESP")
-	oSection1:Cell("B1_XESPACO"):SetAutoSize(.T.)
-	oSection1:Cell("B1_XESPACO"):SetSize(20)
+	TRCell():New(oSectionDetail,"A90_DD",,"90 DD")
+	oSectionDetail:Cell("A90_DD"):SetAutoSize(.T.)
+	oSectionDetail:Cell("A90_DD"):SetSize(20)
 
-	// Break by AGRUPAMENTO
-	oBreakAgrup := TRBreak():New(oSection1, {|| OTR814->AGRU_DESC },, .T., "AGRUPAMENTO")
-	TRCell():New(oBreakAgrup, "AGRU_DESC_CELL",, "AGRUPAMENTO:")
-	oBreakAgrup:OnBreak({|oBrk| oBrk:Cell("AGRU_DESC_CELL"):SetValue("AGRUPAMENTO: " + oBrk:GetLastValue())})
-	
-	// Break by GRUPO
-	oBreakGrupo := TRBreak():New(oSection1, {|| OTR814->GRUPO },, .T., "GRUPO")
-	TRCell():New(oBreakGrupo, "GRUPO_CELL",, "GRUPO:")
-	oBreakGrupo:OnBreak({|oBrk| oBrk:Cell("GRUPO_CELL"):SetValue("GRUPO: " + oBrk:GetLastValue())})
+	TRCell():New(oSectionDetail,"B1_XESPACO",,"ESP")
+	oSectionDetail:Cell("B1_XESPACO"):SetAutoSize(.T.)
+	oSectionDetail:Cell("B1_XESPACO"):SetSize(20)
 
-	oSection1:SetPageBreak(.T.)
 Return oReport
 
 Static Function fExecRel(oReport)
 
 	Local _aArea 		:= GetArea()
 	Local cQry 		:= ""
-	Local oSection1 	:= oReport:Section(1)
+	Local oSectionAgru 	:= oReport:Section("AGRUPAMENTO")
+	Local oSectionDetail 	:= oReport:Section("DADOS")
+    Local cLastAgruDesc     := ""
 
 	Local cTabGer 	:= cSemana
 
@@ -238,7 +237,7 @@ Endif
     
 	
 	If cCalculo == "Simulacao"
-	cQry 		+= "                   and DA1_DTUMOV = '"+_cLastData+"'
+cQry 		+= "                   and DA1_DTUMOV = '"+_cLastData+"'
 	Else
 cQry 		+= "                   and DA1.d_e_l_e_t_ = ' '    
 	Endif
@@ -247,21 +246,21 @@ cQry 		+= "                   and DA1.d_e_l_e_t_ = ' '
 	cQry 		+= "  AND B1_GRUPO <= '"+cGrupoAte+"'
 	cQry 		+= "  AND B1_COD >= '"+cProdDe+"'
 	cQry 		+= "  AND B1_COD <= '"+cProdAte+"'
-	cQry 		+= "  AND B1_XFORLIN = ' '
-	cQry 		+= "  AND B1_XCODBAS = ' '
+	cQry 		+= "  AND B1_XFORLIN = ' '"
+	cQry 		+= "  AND B1_XCODBAS = ' '"
 
 	if(cAgru <> "Relatorio Completo")
 		cQry 		+= "  AND BM_XAGRP = '"+cAgru+"'
 	endif
 
 	cQry 		+= "  AND RMZA.DESCRI != 'TERCEIROS'"
-	cQry 		+= "    		ORDER BY RMZA.ORDEM, BM_DESC"
+	cQry 		+= "    		ORDER BY AGRU_DESC, GRUPO"
 	U_ORTQUERY(cQry, "OTR814")
 
 	OTR814->(dbgotop())
 
-	oSection1:Init()
-	oSection1:SetHeaderSection(.T.)
+	oSectionAgru:Init()
+	oSectionDetail:Init()
 
 	While !("OTR814")->(EOF())
 
@@ -270,20 +269,29 @@ cQry 		+= "                   and DA1.d_e_l_e_t_ = ' '
 		If oReport:Cancel()
 			Exit
 		EndIf
-		oSection1:Cell("BM_GRUPO" ):SetValue( OTR814->BM_GRUPO )
-		oSection1:Cell("B1_COD" ):SetValue( OTR814->B1_COD )
-		oSection1:Cell("MEDIDA" ):SetValue( Alltrim(STR(OTR814->B1_XLARG)) + "X" + Alltrim(Str(OTR814->B1_XCOMP)) + "/" + Alltrim(Str(OTR814->B1_XALT)) )
-		oSection1:Cell("A_VISTA" ):SetValue( OTR814->A_VISTA )
-		oSection1:Cell("A30_DD" ):SetValue( OTR814->A30_DD )
-		oSection1:Cell("A60_DD" ):SetValue( OTR814->A60_DD )
-		oSection1:Cell("A90_DD" ):SetValue( OTR814->A90_DD )
-		oSection1:Cell("B1_XESPACO" ):SetValue( OTR814->B1_XESPACO )
-		oSection1:PrintLine()
+
+        If OTR814->AGRU_DESC != cLastAgruDesc
+            oSectionAgru:Cell("AGRU_DESC_CELL"):SetValue(OTR814->AGRU_DESC)
+            oSectionAgru:PrintLine()
+            cLastAgruDesc := OTR814->AGRU_DESC
+        Endif
+
+		oSectionDetail:Cell("BM_GRUPO" )	:= OTR814->BM_GRUPO 
+		oSectionDetail:Cell("B1_COD" )	:= OTR814->B1_COD 
+		oSectionDetail:Cell("MEDIDA" )	:= Alltrim(STR(OTR814->B1_XLARG)) + "X" + Alltrim(Str(OTR814->B1_XCOMP)) + "/" + Alltrim(Str(OTR814->B1_XALT)) 
+		oSectionDetail:Cell("A_VISTA" )	:= OTR814->A_VISTA 
+		oSectionDetail:Cell("A30_DD" )	:= OTR814->A30_DD 
+		oSectionDetail:Cell("A60_DD" )	:= OTR814->A60_DD 
+		oSectionDetail:Cell("A90_DD" )	:= OTR814->A90_DD 
+		oSectionDetail:Cell("B1_XESPACO" )	:= OTR814->B1_XESPACO 
+		oSectionDetail:PrintLine()
+
 		OTR814->(dbskip())
 
 	Enddo
-	oReport:SkipLine(2)
-	oSection1:Finish()
+
+	oSectionAgru:Finish()
+	oSectionDetail:Finish()
 	OTR814->(DbCloseArea())
 	oReport:EndPage()
 
