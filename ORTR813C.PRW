@@ -70,7 +70,7 @@ static function cAgrupamento(Agrupamento)
 		CASE Agrupamento == "Dirigida 6"
 		cAgru := "000006"
 		cTitulo += Agrupamento 
-	
+
 		CASE Agrupamento == "Dirigida 11"
 		cAgru := "000011"
 		cTitulo += Agrupamento 
@@ -254,8 +254,10 @@ cQry 		+= "                   and DA1.d_e_l_e_t_ = ' '
 	endif
 
 	cQry 		+= "  AND RMZA.DESCRI != 'TERCEIROS'"
-	cQry 		+= "    		ORDER BY AGRU_DESC, GRUPO"
+	cQry 		+= "    		ORDER BY RMZA.ORDEM, BM_DESC"
 	U_ORTQUERY(cQry, "OTR814")
+
+    OTR814->(DbSort("AGRU_DESC+GRUPO"))
 
 	OTR814->(dbgotop())
 
@@ -276,14 +278,14 @@ cQry 		+= "                   and DA1.d_e_l_e_t_ = ' '
             cLastAgruDesc := OTR814->AGRU_DESC
         Endif
 
-		oSectionDetail:Cell("BM_GRUPO" )	:= OTR814->BM_GRUPO 
-		oSectionDetail:Cell("B1_COD" )	:= OTR814->B1_COD 
-		oSectionDetail:Cell("MEDIDA" )	:= Alltrim(STR(OTR814->B1_XLARG)) + "X" + Alltrim(Str(OTR814->B1_XCOMP)) + "/" + Alltrim(Str(OTR814->B1_XALT)) 
-		oSectionDetail:Cell("A_VISTA" )	:= OTR814->A_VISTA 
-		oSectionDetail:Cell("A30_DD" )	:= OTR814->A30_DD 
-		oSectionDetail:Cell("A60_DD" )	:= OTR814->A60_DD 
-		oSectionDetail:Cell("A90_DD" )	:= OTR814->A90_DD 
-		oSectionDetail:Cell("B1_XESPACO" )	:= OTR814->B1_XESPACO 
+		oSectionDetail:Cell("BM_GRUPO" ):SetValue( OTR814->BM_GRUPO )
+		oSectionDetail:Cell("B1_COD" ):SetValue( OTR814->B1_COD )
+		oSectionDetail:Cell("MEDIDA" ):SetValue( Alltrim(STR(OTR814->B1_XLARG)) + "X" + Alltrim(Str(OTR814->B1_XCOMP)) + "/" + Alltrim(Str(OTR814->B1_XALT)) )
+		oSectionDetail:Cell("A_VISTA" ):SetValue( OTR814->A_VISTA )
+		oSectionDetail:Cell("A30_DD" ):SetValue( OTR814->A30_DD )
+		oSectionDetail:Cell("A60_DD" ):SetValue( OTR814->A60_DD )
+		oSectionDetail:Cell("A90_DD" ):SetValue( OTR814->A90_DD )
+		oSectionDetail:Cell("B1_XESPACO" ):SetValue( OTR814->B1_XESPACO )
 		oSectionDetail:PrintLine()
 
 		OTR814->(dbskip())
