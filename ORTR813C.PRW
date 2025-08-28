@@ -154,11 +154,13 @@ Static Function fRodaRelat(cTitulo)
 
 	// Break by AGRUPAMENTO
 	oBreakAgrup := TRBreak():New(oSection1, {|| OTR814->AGRU_DESC },, .T., "AGRUPAMENTO")
-	oBreakAgrup:SetTitle({|| "AGRUPAMENTO: " + oBreakAgrup:GetLastValue() })
+	TRCell():New(oBreakAgrup, "AGRU_DESC_CELL",, "AGRUPAMENTO:")
+	oBreakAgrup:OnBreak({|oBrk| oBrk:Cell("AGRU_DESC_CELL"):SetValue("AGRUPAMENTO: " + oBrk:GetLastValue())})
 	
 	// Break by GRUPO
 	oBreakGrupo := TRBreak():New(oSection1, {|| OTR814->GRUPO },, .T., "GRUPO")
-	oBreakGrupo:SetTitle({|| "GRUPO: " + oBreakGrupo:GetLastValue() })
+	TRCell():New(oBreakGrupo, "GRUPO_CELL",, "GRUPO:")
+	oBreakGrupo:OnBreak({|oBrk| oBrk:Cell("GRUPO_CELL"):SetValue("GRUPO: " + oBrk:GetLastValue())})
 
 	oSection1:SetPageBreak(.T.)
 Return oReport
