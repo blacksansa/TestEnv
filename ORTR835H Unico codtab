@@ -1,0 +1,139 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "FWBROWSE.CH"
+#INCLUDE "TOTVS.CH"
+
+User Function ORTR814H()
+
+    Local aArea    := GetArea()
+    Local oReport  := Nil
+    Local aRet     := {}
+    Local c_Titulo := "Relatório Comparativo Cobol vs Protheus"
+    Local aPergs   := {}
+
+    Private cSemanaCons := ""
+    Private cProDe      := ""
+    Private cProdAte    := ""
+
+    // Perguntas de parâmetro
+    aadd(aPergs, {1, "Semana consulta:", Space(GetSX3Cache("DA0_CODTAB", "X3_TAMANHO")), , , "DA0", , 50, .T.})
+    aadd(aPergs, {1, "Produto de: " , Space(GetSX3Cache("B1_COD", "X3_TAMANHO")) , , "MV_PAR02 <= MV_PAR03", "SB1", , 80, .F.})
+    aadd(aPergs, {1, "Produto Até: " , Replicate("Z",GetSX3Cache("B1_COD", "X3_TAMANHO")) , , "MV_PAR02 <= MV_PAR03", "SB1", , 80, .F.})
+
+    If !Parambox(aPergs, c_Titulo, aRet)
+        MsgStop("Emissão do relatório cancelada.","Atenção")
+        Return
+    Else
+        cSemanaCons := aRet[1]
+        cProDe      := aRet[2]
+        cProdAte    := aRet[3]
+    EndIf
+
+    oReport := fRodaRelat(c_Titulo)
+    oReport:PrintDialog()
+
+    RestArea(aArea)
+
+Return
+
+// =====================================
+// Layout do Relatório
+// =====================================
+Static Function fRodaRelat(cTitulo)
+
+    Local oReport   := TReport():New("ORTR814", cTitulo, "ORTR814", {|oReport| fExecRel(oReport)}, cTitulo)
+    Local oSection1 := TRSection():New(oReport,"DADOS")
+
+    oReport:SetTotalInLine(.T.)
+    oReport:NoUserFilter()
+    oReport:HideParamPage()
+    oReport:SetLandScape()
+    oReport:oPage:SetPaperSize(9)
+
+    // Colunas
+    TRCell():New(oSection1,"B1_COD",,"PRODUTO")
+    TRCell():New(oSection1,"B1_DESC",,"DESCRIÇÃO")
+
+    TRCell():New(oSection1,"CUSTO_COBOL",,"CUSTO COBOL")
+    TRCell():New(oSection1,"VENDA_COBOL",,"VENDA COBOL")
+
+    TRCell():New(oSection1,"CUSTO_PROTHEUS",,"CUSTO PROTHEUS")
+    TRCell():New(oSection1,"VENDA_PROTHEUS",,"VENDA PROTHEUS")
+
+    TRCell():New(oSection1,"DIF_CUSTO",,"DIF. CUSTO")
+    TRCell():New(oSection1,"DIF_VENDA",,"DIF. VENDA")
+
+    TRCell():New(oSection1,"PCT_CORRETO_CUSTO",,"% CORRETO CUSTO")
+    TRCell():New(oSection1,"PCT_CORRETO_VENDA",,"% CORRETO VENDA")
+
+Return oReport
+
+// =====================================
+// Execução da Query e Alimentação
+// =====================================
+Static Function fExecRel(oReport)
+
+    Local cQry      := ""
+    Local oSection1 := oReport:Section(1)
+    Local _aArea    := GetArea()
+
+    // Query comparativa
+    cQry := " SELECT "
+    cQry += "    B1_COD, "
+    cQry += "    B1_DESC, "
+    cQry += "    DA1_XMARCS AS CUSTO_COBOL, "
+    cQry += "    DA1_XMARPR AS VENDA_COBOL, "
+    cQry += "    DA1_XCUSTO AS CUSTO_PROTHEUS, "
+    cQry += "    DA1_PRCVEN AS VENDA_PROTHEUS, "
+    cQry += "    (DA1_XCUSTO - DA1_XMARCS) AS DIF_CUSTO, "
+    cQry += "    (DA1_PRCVEN - DA1_XMARPR) AS DIF_VENDA, "
+    cQry += "    (1 - ((DA1_XCUSTO - DA1_XMARCS) / NULLIF(DA1_XCUSTO,0))) * 100 AS PCT_CORRETO_CUSTO, "
+    cQry += "    (1 - ((DA1_PRCVEN - DA1_XMARPR) / NULLIF(DA1_PRCVEN,0))) * 100 AS PCT_CORRETO_VENDA "
+    cQry += " FROM SIGA.DA1030 DA1 "
+    cQry += " INNER JOIN SIGA.SB1030 SB1 ON B1_COD = DA1_CODPRO "
+    cQry += "      AND SB1.B1_FILIAL = ' ' "
+    cQry += "      AND SB1.D_E_L_E_T_ = ' ' "
+    cQry += " WHERE DA1_FILIAL = ' ' "
+    cQry += "   AND DA1.D_E_L_E_T_ = ' ' "
+    cQry += "   AND DA1_CODTAB = '" + cSemanaCons + "' "
+    cQry += "   AND B1_COD >= '" + cProDe   + "' "
+    cQry += "   AND B1_COD <= '" + cProdAte + "' "
+    cQry += " ORDER BY B1_COD "
+
+    U_ORTQUERY(cQry, "ORTR814")
+    ORTR814->(DbGoTop())
+
+    oSection1:Init()
+    oSection1:SetHeaderSection(.T.)
+
+    While !("ORTR814")->(Eof())
+
+        oReport:IncMeter()
+        If oReport:Cancel()
+            Exit
+        EndIf
+
+        oSection1:Cell("B1_COD"             ):SetValue(ORTR814->B1_COD)
+        oSection1:Cell("B1_DESC"            ):SetValue(ORTR814->B1_DESC)
+        oSection1:Cell("CUSTO_COBOL"        ):SetValue(ORTR814->CUSTO_COBOL)
+        oSection1:Cell("VENDA_COBOL"        ):SetValue(ORTR814->VENDA_COBOL)
+        oSection1:Cell("CUSTO_PROTHEUS"     ):SetValue(ORTR814->CUSTO_PROTHEUS)
+        oSection1:Cell("VENDA_PROTHEUS"     ):SetValue(ORTR814->VENDA_PROTHEUS)
+        oSection1:Cell("DIF_CUSTO"          ):SetValue(ORTR814->DIF_CUSTO)
+        oSection1:Cell("DIF_VENDA"          ):SetValue(ORTR814->DIF_VENDA)
+        oSection1:Cell("PCT_CORRETO_CUSTO"  ):SetValue(ORTR814->PCT_CORRETO_CUSTO)
+        oSection1:Cell("PCT_CORRETO_VENDA"  ):SetValue(ORTR814->PCT_CORRETO_VENDA)
+
+        oSection1:PrintLine()
+        ORTR814->(DbSkip())
+
+    EndDo
+
+    oSection1:Finish()
+    ORTR814->(DbCloseArea())
+    oReport:EndPage()
+
+    RestArea(_aArea)
+
+Return(.T.)
