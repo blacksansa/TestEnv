@@ -104,4 +104,46 @@ Static Function fExecRel(oReport, cCobol, cProtheus, cProDe, cProdAte, cGrpDe, c
     cQry += "   CASE WHEN A.DA1_XMARPR<>0 AND B.DA1_PRCVEN IS NOT NULL THEN (1 - ABS((A.DA1_XMARPR-B.DA1_PRCVEN)/A.DA1_XMARPR))*100 ELSE 0 END)/2) AS ACERTO_TOTAL,"
     cQry += " (CASE WHEN B.DA1_XCUSTO IS NOT NULL THEN CASE WHEN ABS(A.DA1_XCUSTO-B.DA1_XCUSTO)<ABS(A.DA1_XMARPR-B.DA1_PRCVEN) THEN 'CUSTO MAIS PRECISO' ELSE 'PREÇO MAIS PRECISO' END ELSE 'SEM COMPARAÇÃO' END) AS MELHOR_TABELA"
     cQry += " FROM SIGA.DA1030 A "
-    c
+    cQry += IIF(lMostrarTodos,"LEFT JOIN","INNER JOIN") + " SIGA.DA1030 B ON A.DA1_CODPRO=B.DA1_CODPRO AND B.DA1_CODTAB='"+cProtheus+"'"
+    cQry += " WHERE A.DA1_CODTAB='"+cCobol+"'"
+    cQry += " AND A.DA1_CODPRO >= '"+cProDe+"' AND A.DA1_CODPRO <= '"+cProdAte+"'"
+    cQry += " AND A.DA1_GRUPO >= '"+cGrpDe+"' AND A.DA1_GRUPO <= '"+cGrpAte+"'"
+    cQry += " AND A.DA1_XCUSTO IS NOT NULL AND A.DA1_XMARPR IS NOT NULL"
+    If lDiferenca
+        cQry += " AND (A.DA1_XCUSTO<>B.DA1_XCUSTO OR A.DA1_XMARPR<>B.DA1_PRCVEN)"
+    EndIf
+    cQry += " ORDER BY A.DA1_CODPRO"
+
+    U_ORTQUERY(cQry,"ORTP813")
+    ORTP813->(dbgotop())
+
+    oSection:Init()
+    oSection:SetHeaderSection(.T.)
+
+    While !("ORTP813")->(EOF())
+        oReport:IncMeter()
+        If oReport:Cancel()
+            Exit
+        EndIf
+        oSection:Cell("PRODUTO"):SetValue(ORTP813->PRODUTO)
+        oSection:Cell("DESCRICAO"):SetValue(ORTP813->DESCRICAO)
+        oSection:Cell("CUSTO_COBOL"):SetValue(ORTP813->CUSTO_COBOL)
+        oSection:Cell("PRECOV_COBOL"):SetValue(ORTP813->PRECOV_COBOL)
+        oSection:Cell("CUSTO_PROTHEUS"):SetValue(ORTP813->CUSTO_PROTHEUS)
+        oSection:Cell("PRECOV_PROTHEUS"):SetValue(ORTP813->PRECOV_PROTHEUS)
+        oSection:Cell("DIF_CUSTO"):SetValue(ORTP813->DIF_CUSTO)
+        oSection:Cell("DIF_PRECO"):SetValue(ORTP813->DIF_PRECO)
+        oSection:Cell("PCT_ACERTO_CUSTO"):SetValue(ORTP813->PCT_ACERTO_CUSTO)
+        oSection:Cell("PCT_ACERTO_PRECO"):SetValue(ORTP813->PCT_ACERTO_PRECO)
+        oSection:Cell("ACERTO_TOTAL"):SetValue(ORTP813->ACERTO_TOTAL)
+        oSection:Cell("MELHOR_TABELA"):SetValue(ORTP813->MELHOR_TABELA)
+        oSection:PrintLine()
+        ORTP813->(dbskip())
+    Enddo
+
+    oReport:SkipLine(2)
+    oSection:Finish()
+    ORTP813->(DbCloseArea())
+    oReport:EndPage()
+    RestArea(_aArea)
+Return(.T.)
