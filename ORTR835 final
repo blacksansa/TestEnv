@@ -1,0 +1,154 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "FWBROWSE.CH"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TBICONN.CH"
+
+// TEMPLATE BEGIN
+User Function ORTR813H()
+    Local aArea   := GetArea()
+    Local oReport := Nil
+    Local aRet    := {}
+    Local c_Titulo := "Relatório Cobol vs Protheus"
+    Local aPergs  := {}
+
+    Private cProDe, cProdAte       := ""
+    Private cGrupoDe, cGrupoAte    := ""
+    Private cSubGrupoDe, cSubGrupoAte := ""
+    Private eDivergent             := .F.
+    Private lMostrarTodos          := .F.
+
+    // Perguntas de parâmetro
+    aAdd(aPergs, {1, "Semana Cobol:", Space(GetSX3Cache("DA0_CODTAB","X3_TAMANHO")), , , "DA0", , 50, .T.})
+    aAdd(aPergs, {1, "Semana Protheus:", Space(GetSX3Cache("DA0_CODTAB","X3_TAMANHO")), , , "DA0", , 50, .T.})
+    aAdd(aPergs, {1, "Produto de:", Space(GetSX3Cache("B1_COD","X3_TAMANHO")), , "MV_PAR02 <= MV_PAR03", "SB1", , 80, .F.})
+    aAdd(aPergs, {1, "Produto Até:", Replicate("Z",GetSX3Cache("B1_COD","X3_TAMANHO")), , "MV_PAR02 <= MV_PAR03", "SB1", , 80, .F.})
+    aAdd(aPergs, {1, "Grupo de:", Space(GetSX3Cache("BM_GRUPO","X3_TAMANHO")), , "MV_PAR04 <= MV_PAR05", "SBM", , 50, .F.})
+    aAdd(aPergs, {1, "Grupo Até:", Replicate("Z",GetSX3Cache("BM_GRUPO","X3_TAMANHO")), , "MV_PAR04 <= MV_PAR05", "SBM", , 50, .F.})
+    aAdd(aPergs, {1, "SubGrupo de:", Space(GetSX3Cache("BM_XSUBGRU","X3_TAMANHO")), , "MV_PAR06 <= MV_PAR07", "ZA", , 50, .F.})
+    aAdd(aPergs, {1, "SubGrupo Até:", Replicate("Z",GetSX3Cache("BM_XSUBGRU","X3_TAMANHO")), , "MV_PAR06 <= MV_PAR07", "ZA", , 50, .F.})
+    aAdd(aPergs, {3, "Considerar Apenas Produtos com Divergência?", 2, {"SIM","NÃO"}, 100, , .F.})
+    aAdd(aPergs, {3, "Mostrar todos os produtos?", 2, {"SIM","NÃO"}, 100, , .F.})
+
+    // Tela de parâmetros
+    If !Parambox(aPergs, c_Titulo, aRet, , , , , , "ORTR835"+AllTrim(__cUserId), .T.)
+        MsgStop("Emissão do relatório cancelada.","Atenção")
+        Return
+    Else
+        cSemanaCobol    := aRet[1]
+        cSemanaProtheus := aRet[2]
+        cProDe          := aRet[3]
+        cProdAte        := aRet[4]
+        cGrupoDe        := aRet[5]
+        cGrupoAte       := aRet[6]
+        cSubGrupoDe     := aRet[7]
+        cSubGrupoAte    := aRet[8]
+        lDiferenca      := IIF(aRet[9]=2,.F.,.T.)
+        lMostrarTodos   := IIF(aRet[10]=1,.T.,.F.)
+    EndIf
+
+    oReport := fRodaRelat(UPPER(c_Titulo), cSemanaCobol, cSemanaProtheus, cProDe, cProdAte, cGrupoDe, cGrupoAte, cSubGrupoDe, cSubGrupoAte, lDiferenca, lMostrarTodos)
+    oReport:PrintDialog()
+    RestArea(aArea)
+Return
+
+// TEMPLATE FUNCTION: Rodar relatório
+Static Function fRodaRelat(cTitulo, cCobol, cProtheus, cProDe, cProdAte, cGrpDe, cGrpAte, cSubDe, cSubAte, lDiferenca, lMostrarTodos)
+    Local oReport := TReport():New("ORTP813",cTitulo,"ORTP813", {|oReport| fExecRel(oReport, cCobol, cProtheus, cProDe, cProdAte, cGrpDe, cGrpAte, cSubDe, cSubAte, lDiferenca, lMostrarTodos)}, UPPER(cTitulo)+" - ORTOBOM UNIDADE "+cEmpAnt)
+    
+    oReport:SetTotalInLine(.T.)
+    oReport:NoUserFilter()
+    oReport:HideParamPage()
+    oReport:SetLandScape()
+    oReport:oPage:setPaperSize(9)
+
+    Local oSection := TRSection():New(oReport,"DADOS")
+    oSection:SetHeaderBreak(.T.)
+    oSection:SetLinesBefore(1)
+    oSection:lAutoSize := .F.
+    oSection:lBold := .T.
+
+    // Colunas do relatório
+    Local aCols := {"PRODUTO","DESCRICAO","CUSTO_COBOL","PRECOV_COBOL","CUSTO_PROTHEUS","PRECOV_PROTHEUS","DIF_CUSTO","DIF_PRECO","PCT_ACERTO_CUSTO","PCT_ACERTO_PRECO","MELHOR_TABELA"}
+    Local aSizes := {20,40,30,30,30,30,20,20,25,25,30}
+
+    For i:=1 To Len(aCols)
+        TRCell():New(oSection,aCols[i],,AllTrim(aCols[i]))
+        oSection:Cell(aCols[i]):SetAutoSize(.T.)
+        oSection:Cell(aCols[i]):SetSize(aSizes[i])
+    Next
+
+    oSection:SetPageBreak(.T.)
+Return oReport
+
+// TEMPLATE FUNCTION: Executar query e popular relatório
+Static Function fExecRel(oReport, cCobol, cProtheus, cProDe, cProdAte, cGrpDe, cGrpAte, cSubDe, cSubAte, lDiferenca, lMostrarTodos)
+    Local _aArea := GetArea()
+    Local cQry := ""
+    Local oSection := oReport:Section(1)
+
+    // Query com LEFT JOIN para mostrar todos produtos da Cobol se lMostrarTodos = .T.
+    cQry := "SELECT "
+    cQry += " A.DA1_CODPRO AS PRODUTO,"
+    cQry += " A.DA1_DESC AS DESCRICAO,"
+    cQry += " A.DA1_XCUSTO AS CUSTO_COBOL,"
+    cQry += " A.DA1_XMARPR AS PRECOV_COBOL,"
+    cQry += " B.DA1_XCUSTO AS CUSTO_PROTHEUS,"
+    cQry += " B.DA1_PRCVEN AS PRECOV_PROTHEUS,"
+    cQry += " (A.DA1_XCUSTO - B.DA1_XCUSTO) AS DIF_CUSTO,"
+    cQry += " (A.DA1_XMARPR - B.DA1_PRCVEN) AS DIF_PRECO,"
+    cQry += " (CASE WHEN A.DA1_XCUSTO<>0 AND B.DA1_XCUSTO IS NOT NULL THEN (1 - ABS((A.DA1_XCUSTO-B.DA1_XCUSTO)/A.DA1_XCUSTO))*100 ELSE 0 END) AS PCT_ACERTO_CUSTO,"
+    cQry += " (CASE WHEN A.DA1_XMARPR<>0 AND B.DA1_PRCVEN IS NOT NULL THEN (1 - ABS((A.DA1_XMARPR-B.DA1_PRCVEN)/A.DA1_XMARPR))*100 ELSE 0 END) AS PCT_ACERTO_PRECO,"
+    cQry += " (CASE WHEN B.DA1_XCUSTO IS NOT NULL THEN CASE WHEN ABS(A.DA1_XCUSTO-B.DA1_XCUSTO)<ABS(A.DA1_XMARPR-B.DA1_PRCVEN) THEN 'CUSTO MAIS PRECISO' ELSE 'PREÇO MAIS PRECISO' END ELSE 'SEM COMPARAÇÃO' END) AS MELHOR_TABELA "
+    cQry += " FROM SIGA.DA1030 A "
+    cQry += " LEFT JOIN SIGA.DA1030 B "
+    cQry += "   ON A.DA1_CODPRO=B.DA1_CODPRO "
+    cQry += "  AND B.DA1_CODTAB='" + cProtheus + "' "
+    cQry += "  AND B.D_E_L_E_T_=' ' "
+    cQry += " WHERE A.DA1_CODTAB='" + cCobol + "' "
+    cQry += "   AND A.D_E_L_E_T_=' ' "
+    cQry += "   AND A.DA1_XCUSTO IS NOT NULL AND A.DA1_XCUSTO<>'' "
+    cQry += "   AND A.DA1_XMARPR IS NOT NULL AND A.DA1_XMARPR<>'' "
+
+    // Filtrar apenas divergentes se necessário
+    If !lMostrarTodos .And. lDiferenca
+        cQry += " AND B.DA1_CODPRO IS NOT NULL "
+        cQry += " AND (A.DA1_XCUSTO<>B.DA1_XCUSTO OR A.DA1_XMARPR<>B.DA1_PRCVEN) "
+    EndIf
+
+    cQry += " ORDER BY A.DA1_CODPRO"
+    U_ORTQUERY(cQry,"ORTP813")
+    ORTP813->(dbgotop())
+
+    oSection:Init()
+    oSection:SetHeaderSection(.T.)
+
+    While !("ORTP813")->(EOF())
+        oReport:IncMeter()
+        If oReport:Cancel()
+            Exit
+        EndIf
+
+        oSection:Cell("PRODUTO"):SetValue( ORTP813->PRODUTO )
+        oSection:Cell("DESCRICAO"):SetValue( ORTP813->DESCRICAO )
+        oSection:Cell("CUSTO_COBOL"):SetValue( ORTP813->CUSTO_COBOL )
+        oSection:Cell("PRECOV_COBOL"):SetValue( ORTP813->PRECOV_COBOL )
+        oSection:Cell("CUSTO_PROTHEUS"):SetValue( ORTP813->CUSTO_PROTHEUS )
+        oSection:Cell("PRECOV_PROTHEUS"):SetValue( ORTP813->PRECOV_PROTHEUS )
+        oSection:Cell("DIF_CUSTO"):SetValue( ORTP813->DIF_CUSTO )
+        oSection:Cell("DIF_PRECO"):SetValue( ORTP813->DIF_PRECO )
+        oSection:Cell("PCT_ACERTO_CUSTO"):SetValue( ORTP813->PCT_ACERTO_CUSTO )
+        oSection:Cell("PCT_ACERTO_PRECO"):SetValue( ORTP813->PCT_ACERTO_PRECO )
+        oSection:Cell("MELHOR_TABELA"):SetValue( ORTP813->MELHOR_TABELA )
+
+        oSection:PrintLine()
+        ORTP813->(dbskip())
+    Enddo
+
+    oReport:SkipLine(2)
+    oSection:Finish()
+    ORTP813->(DbCloseArea())
+    oReport:EndPage()
+    RestArea(_aArea)
+Return(.T.)
