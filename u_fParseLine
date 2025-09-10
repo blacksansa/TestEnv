@@ -137,3 +137,86 @@
    137         EndIf
    138     Next i
    139 Return lIsNumeric
+
+  These are defined as Static functions, which means they are intended to be used only by other functions within the same source file.
+
+  1. _StrTok
+
+  This function mimics the behavior of a tokenizer. It takes a string and a delimiter (in our case, a space) and splits the string into a list of "tokens" or words, which it returns in the array aTokens.
+
+    1 /*
+    2 * Helper function to tokenize a string.
+    3 * @param cString The string to be split.
+    4 * @param cDelimiter The character to split the string by.
+    5 * @param aTokens An array passed by reference to be populated with the tokens.
+    6 */
+    7 Static Function _StrTok(cString, cDelimiter, aTokens)
+    8     Local nPos := 1
+    9     Local nAt := 0
+   10     aTokens := {}
+   11     While nPos <= Len(cString)
+   12         nAt := At(cDelimiter, SubStr(cString, nPos))
+   13         If nAt == 0
+   14             AAdd(aTokens, SubStr(cString, nPos))
+   15             Exit
+   16         EndIf
+   17         AAdd(aTokens, SubStr(cString, nPos, nAt - 1))
+   18         nPos += nAt
+   19     EndWhile
+   20 Return
+
+  2. IsSize
+
+  This function determines if a given word is a size string. It uses _StrTok to split the word by "x" and then checks if the resulting parts (2 or 3 of them) are all numbers.
+
+    1 /*
+    2 * Helper function to check if a string represents a size (e.g., "10x20" or "10x20x30").
+    3 * @param cWord The word to check.
+    4 * @return .T. if it's a size, .F. otherwise.
+    5 */
+    6 Static Function IsSize(cWord)
+    7     Local aParts := {}
+    8     Local i := 0
+    9     Local lIsSize := .T.
+   10
+   11     // Size must contain 'x'
+   12     If At("x", Lower(cWord)) == 0
+   13         Return .F.
+   14     EndIf
+   15
+   16     _StrTok(Lower(cWord), "x", @aParts)
+   17
+   18     If Len(aParts) < 2 .OR. Len(aParts) > 3
+   19         Return .F.
+   20     EndIf
+   21
+   22     For i := 1 to Len(aParts)
+   23         // Check if each part is a number
+   24         If ValType(aParts[i]) != 'N'
+   25             lIsSize := .F.
+   26             Exit
+   27         EndIf
+   28     Next
+   29
+   30     Return lIsSize
+   31 End Function
+
+  3. IsNumeric
+
+  This is a simple but important helper to validate if a string contains a numeric value, specifically allowing for a decimal point. This is used to find cCode2 at the end of a description.
+
+    1 /*
+    2 * Helper function to check if a string can be converted to a number (including decimals).
+    3 * @param cValue The string value to check.
+    4 * @return .T. if it's numeric, .F. otherwise.
+    5 */
+    6 Static Function IsNumeric(cValue)
+    7     Local lIsNumeric := .T.
+    8     Local i := 0
+    9     For i := 1 To Len(cValue)
+   10         If !(SubStr(cValue, i, 1) >= "0" .And. SubStr(cValue, i, 1) <= "9" .Or. SubStr(cValue, i, 1) == ".")
+   11             lIsNumeric := .F.
+   12             Exit
+   13         EndIf
+   14     Next i
+   15 Return lIsNumeric
