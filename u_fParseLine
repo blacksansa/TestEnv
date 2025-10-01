@@ -1,1 +1,4 @@
-243901010100001SACO TRANSP IMPRESSO                              002150001580000150000000000000470000000120200000015020000000000016670000000000 00000 000000000000000000509000000NSX6               NZ               TTERCEIROS       0000000000000000000000010CIAPLAST (ORTOBOM)   000000000000OUTROS         200D41
+					ElseIf substr(cBuffer,006,4) $ ("1010") .AND. SB1->B1_UM ="ML" //SACO   Por Luiz Otavio p/ trazer o valor em Milheiro
+						nKgMl:= (SB1->B1_XLARG*100)*(SB1->B1_XCOMP*100)*SB1->B1_XALT*0.922 // convert para Milheiro
+						_xnXCUSTO := Round(nKgMl*Val(substr(cBuffer,099,10))/100,2)
+						_xnPRCVEN := Round(nKgMl*(Val(substr(cBuffer,109,10))/100),2)
