@@ -1,22 +1,6 @@
-If ( SubStr(cCodigo, 1, 6) == "201011" .OR. SubStr(cCodigo, 1, 6) == "201021" ) .OR. ;
-   ( cCodigo == "1040140003" .OR. ;
-     cCodigo == "1040140086" .OR. ;
-     cCodigo == "1040140088" .OR. ;
-     cCodigo == "1040140089" .OR. ;
-     cCodigo == "1040140090" .OR. ;
-     cCodigo == "1040140091" .OR. ;
-     cCodigo == "1040140097" )
-
-    cWsEspuma := "S"
-Else
-    cWsEspuma := "N"
-EndIf
-
-If ( cWsEspuma == "N" ) .OR. ;
-   ( SubStr(cCodigo, 1, 1) == "0" ) .OR. ;
-   ( SubStr(cCodigo, 1, 6) == "201030" )
-
-    nVlCusto2 := nVlTotalCusto * 1.05
-Else
-    nVlCusto2 := ( nVlTotalCusto * 1.05 ) * 1.05
-EndIf
+Posição (Início)	Tamanho	Conteúdo Original	Descrição do Campo (Provável)	Valor Formatado
+16	15	002150001580000	Preço Unitário (Bruto/Tabela)	21,50001580
+31	15	150000000000004	Quantidade/Fator	150,000000000004
+46	15	700000001202000	Custo Unitário (Líquido/Revisão)	70,0000001202
+61	15	001502000000001	Preço/Custo Secundário	1,502000000001
+76	15	667000000000000	Outro Valor Numérico	667,00000000
