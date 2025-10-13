@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>12165</WindowHeight>
+  <WindowWidth>28800</WindowWidth>
+  <WindowTopX>32767</WindowTopX>
+  <WindowTopY>32767</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Font ss:FontName="Courier New" x:Family="Modern" ss:Size="8"/>
+  </Style>
+  <Style ss:ID="s62">
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="3"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="s63">
+   <Alignment ss:Horizontal="Left" ss:Vertical="Bottom"/>
+   <Font ss:FontName="Courier New" x:Family="Modern" ss:Size="8"/>
+  </Style>
+  <Style ss:ID="s64">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <Font ss:FontName="Courier New" x:Family="Modern" ss:Size="8"/>
+   <NumberFormat ss:Format="Fixed"/>
+  </Style>
+  <Style ss:ID="s65">
+   <NumberFormat ss:Format="Fixed"/>
+  </Style>
+  <Style ss:ID="s66">
+   <Borders/>
+   <Interior/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="03-02 - RELATÓRIO COBOL VS PRO">
+  <Table ss:ExpandedColumnCount="7" ss:ExpandedRowCount="30" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultRowHeight="11.25">
+   <Column ss:Width="186" ss:Span="5"/>
+   <Row>
+    <Cell><Data ss:Type="String">Dt.Ref: 13/10/25</Data></Cell>
+   </Row>
+   <Row ss:Index="3">
+    <Cell><Data ss:Type="String">Hora: 16:42:38</Data></Cell>
+   </Row>
+   <Row ss:Index="5">
+    <Cell><Data ss:Type="String">Emissão: 13/10/25</Data></Cell>
+   </Row>
+   <Row ss:Index="7" ss:Height="12">
+    <Cell ss:StyleID="s62"><Data ss:Type="String">PRODUTO</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">DESCRICAO</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">QUANTIDADE</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">CUSTO</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">QUEBRA</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">CUSTO TOTAL</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">TOTAL</Data></Cell>
+   </Row>
+   <Row ss:Height="12">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000010011</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">TDI - TOLUENO DE DISOCIANATO</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">35.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">17.940300000000001</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">636.88064999999995</Data></Cell>
+    <Cell ss:StyleID="s65" ss:Formula="=SUM(RC[-1]:R[18]C[-1])*1.05/R[22]C[-6]"><Data
+      ss:Type="Number">23.155493855454544</Data></Cell>
+   </Row>
+   <Row ss:Index="10">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000010057</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">NIAX SILICONE L594 PLUS/ B8275</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">55.001100000000001</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">50</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">110.0022</Data></Cell>
+   </Row>
+   <Row ss:Index="12">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000010081</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">CLORETO DE METILENO</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12.78375</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">270</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">153.405</Data></Cell>
+   </Row>
+   <Row ss:Index="14">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000010121</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">ESTANHO LIOCAT 29</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.16200000000000001</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">166.67699999999999</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">27.001674000000001</Data></Cell>
+   </Row>
+   <Row ss:Index="16">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000010183</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">VORANOL 3011</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">48.05</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">17.699850000000001</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">850.47779249999996</Data></Cell>
+   </Row>
+   <Row ss:Index="18">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000011423</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">D MOLDE 44770</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">30.3933</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15.19665</Data></Cell>
+   </Row>
+   <Row ss:Index="20">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000014453</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">AMICAT BC 3305 T 200KG</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.20899999999999999</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">79.815749999999994</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16.681491749999999</Data></Cell>
+   </Row>
+   <Row ss:Index="22">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000014455</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">AMICEL AMF BOMB 50KG</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.129</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">23.955749999999998</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3.09029175</Data></Cell>
+   </Row>
+   <Row ss:Index="24">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000030051</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">FILME RECICLADO</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.03</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12.16005</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.3648015</Data></Cell>
+   </Row>
+   <Row ss:Index="26">
+    <Cell ss:StyleID="s63"><Data ss:Type="String">0000044481</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">PAPEL KRAFT P/ESPUMA¿AO 2,40</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0.6</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10.4328</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.2596800000000004</Data></Cell>
+   </Row>
+   <Row ss:Index="29">
+    <Cell><Data ss:Type="String">QUEBRA DO PRODUTO</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">82.5</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.4921259845"/>
+    <Footer x:Margin="0.4921259845"/>
+    <PageMargins x:Bottom="0.984251969" x:Left="0.78740157499999996"
+     x:Right="0.78740157499999996" x:Top="0.984251969"/>
+   </PageSetup>
+   <Selected/>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>6</ActiveRow>
+     <ActiveCol>6</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>
